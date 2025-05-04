@@ -12,7 +12,9 @@ class PostServices{
   addPost(Post post)async{
     await _firebaseFirestore.collection('posts').doc().set(post.toJson());
   }
-
+Stream<DocumentSnapshot> fetchPostComments(String postId) {
+    return _firebaseFirestore.collection('posts').doc(postId).snapshots();
+  }
   addComment(Comment comment ,String postId)async{
     await _firebaseFirestore.collection('posts').doc(postId).update(
     {
@@ -20,7 +22,33 @@ class PostServices{
     }
     );
   }
-
+  Future<void> toggleCommentLike(String postId, int commentIndex, String userId) async {
+  final postRef = FirebaseFirestore.instance.collection('posts').doc(postId);
+  
+  await FirebaseFirestore.instance.runTransaction((transaction) async {
+    final snapshot = await transaction.get(postRef);
+    final comments = List<Map<String, dynamic>>.from(snapshot.data()?['comments'] ?? []);
+    
+    if (commentIndex < comments.length) {
+      final comment = Map<String, dynamic>.from(comments[commentIndex]);
+      final likes = List<String>.from(comment['likes'] ?? []);
+      
+      if (likes.contains(userId)) {
+        likes.remove(userId);
+      } else {
+        likes.add(userId);
+      }
+      
+      comment['likes'] = likes;
+      comments[commentIndex] = comment;
+      
+      transaction.update(postRef, {'comments': comments});
+    }
+  });
+}
+Future<DocumentSnapshot> fetchPost(String postId) {
+  return FirebaseFirestore.instance.collection('posts').doc(postId).get();
+}
    Stream <QuerySnapshot>fetchAllCommentsByPost () {
     return _firebaseFirestore.collection('posts').snapshots();
   } 

@@ -26,6 +26,7 @@ class AuthServices {
       return null;
     }
   }
+  
 
   Future loginUser(String email, String password) async {
     try {

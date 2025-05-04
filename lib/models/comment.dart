@@ -1,25 +1,41 @@
-import 'dart:convert';
-
-List<Comment> commentFromJson(String str) => List<Comment>.from(json.decode(str).map((x) => Comment.fromJson(x)));
-
-String commentToJson(List<Comment> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Comment {
-    Comment({
-        required this.author,
-        required this.text,
-    });
+  final String author;
+  final String text;
+  final DateTime createdAt;
 
-    String author;
-    String text;
+  Comment({
+    required this.author,
+    required this.text,
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
-    factory Comment.fromJson(Map<String, dynamic> json) => Comment(
-        author: json["author"],
-        text: json["text"],
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      author: json['author'] as String,
+      text: json['text'] as String,
+      createdAt: (json['createdAt'] as Timestamp).toDate(),
     );
+  }
 
-    Map<String, dynamic> toJson() => {
-        "author": author,
-        "text": text,
+  Map<String, dynamic> toJson() {
+    return {
+      'author': author,
+      'text': text,
+      'createdAt': Timestamp.fromDate(createdAt),
     };
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Comment &&
+          runtimeType == other.runtimeType &&
+          author == other.author &&
+          text == other.text &&
+          createdAt == other.createdAt;
+
+  @override
+  int get hashCode => author.hashCode ^ text.hashCode ^ createdAt.hashCode;
 }
