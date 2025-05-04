@@ -1,6 +1,3 @@
-// ignore_for_file: prefer_const_constructors, avoid_print
-
-
 import 'package:eguideapp/pages/core/add_post.dart';
 import 'package:eguideapp/pages/core/homepage.dart';
 import 'package:eguideapp/pages/core/profile.dart';
@@ -15,57 +12,57 @@ class NavPage extends StatefulWidget {
 }
 
 class _NavPageState extends State<NavPage> {
-   int _selectedIndex =0;
+  int _selectedIndex = 0;
 
-   final List<Widget>_pages=[
-     Homepage(),
-     addPostPage(),
-     ProfileScreen(),
-      
-   ];
+  final List<Widget> _pages = [
+    const Homepage(),
+    const addPostPage(),
+    const ProfileScreen(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar:Container(
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: Container(
         color: Colors.white12,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: GNav(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             backgroundColor: Colors.white12,
-            color: Color.fromARGB(230, 94, 142, 206) ,
-            activeColor: Color.fromARGB(230, 94, 142, 206) ,
+            color: Color.fromARGB(230, 94, 142, 206),
+            activeColor: Color.fromARGB(230, 94, 142, 206),
             tabBackgroundColor: Colors.grey.shade200,
             gap: 8,
             padding: EdgeInsets.all(16),
-            onTabChange:(int index){
-             setState(() {
-                _selectedIndex = index ; 
-             });
-                },
-            // ignore: prefer_const_literals_to_create_immutables
-            tabs:[
-              
+            onTabChange: (int index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            tabs: [
               GButton(
                 icon: Icons.home,
                 text: 'Home',
               ),
-               GButton(
+              GButton(
                 icon: Icons.add,
                 gap: 8,
                 text: 'Add post',
-                ),
+              ),
               GButton(
                 icon: Icons.person,
                 gap: 8,
                 text: 'Profile',
-                ),
-                
-            ] ),
+              ),
+            ],
+          ),
         ),
       ),
-
     );
   }
 }

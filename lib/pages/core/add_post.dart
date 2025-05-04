@@ -27,7 +27,7 @@ FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
 class _addPostPageState extends State<addPostPage> {
   bool isTextEmpty = true;
-  bool imageUploaded = false; // Flag to track if image has been uploaded
+  bool imageUploaded = false;
 
   firebase_storage.FirebaseStorage storage = firebase_storage.FirebaseStorage.instance;
   XFile myImg = XFile('');
@@ -55,7 +55,7 @@ class _addPostPageState extends State<addPostPage> {
     if (userImg != null) {
       setState(() {
         myImg = XFile(userImg.path);
-        imageUploaded = true; // Set to true once the image is selected
+        imageUploaded = true;
       });
     }
   }
@@ -112,11 +112,11 @@ class _addPostPageState extends State<addPostPage> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.grey.shade50,
-                    enabledBorder: const OutlineInputBorder(
+                    enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.blue, width: 2.0),
                     ),
                   ),
                 ),
@@ -126,8 +126,9 @@ class _addPostPageState extends State<addPostPage> {
                   children: const [
                     Text(
                       'Write your Post :',
-                      style: TextStyle(color: Color.fromARGB(255, 94, 142, 206), fontSize: 20),
-                    ),
+                      style: TextStyle(color: Color.fromARGB(255, 94, 142, 206), 
+                      fontSize: 20,
+                    ),)
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -146,11 +147,11 @@ class _addPostPageState extends State<addPostPage> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.grey.shade50,
-                    enabledBorder: const OutlineInputBorder(
+                    enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.blue, width: 2.0),
                     ),
                   ),
                 ),
@@ -179,7 +180,7 @@ class _addPostPageState extends State<addPostPage> {
                     ),
                     const Spacer(),
                     Visibility(
-                      visible: imageUploaded, // Show only if image is uploaded
+                      visible: imageUploaded,
                       child: Row(
                         children: const [
                           Icon(

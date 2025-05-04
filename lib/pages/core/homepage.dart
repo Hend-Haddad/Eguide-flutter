@@ -1,17 +1,10 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, avoid_print, sort_child_properties_last, sized_box_for_whitespace
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eguideapp/servises/post_services.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import '../../models/post.dart';
 import '../../utils/app_styles.dart';
-
 import '../../widgets/post_widget.dart';
-
-
-TextEditingController _searchController= TextEditingController();
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -19,24 +12,47 @@ class Homepage extends StatefulWidget {
   @override
   State<Homepage> createState() => _HomepageState();
 }
-PostServices _postServices =PostServices();
+
+PostServices _postServices = PostServices();
+
 class _HomepageState extends State<Homepage> {
+  late TextEditingController _searchController;
+  String _searchText = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _searchController.addListener(() {
+      setState(() {
+        _searchText = _searchController.text.toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white12,
-     body: SafeArea(
+      body: SafeArea(
         child: Container(
-          margin: EdgeInsets.only(top: 10,bottom: 4,),
+          margin: EdgeInsets.only(top: 10, bottom: 4),
           child: Column(
             children: [
-             SizedBox(height: 30,),
+              SizedBox(height: 30),
               Padding(
                 padding: const EdgeInsets.only(left: 24),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text('Discover the country \n      Live like a native',style: AppStyles.authTitleStyle,),
+                    Text('Discover the country \n      Live like a native',
+                        style: AppStyles.authTitleStyle),
                   ],
                 ),
               ),
@@ -46,60 +62,76 @@ class _HomepageState extends State<Homepage> {
                 child: CupertinoSearchTextField(
                   backgroundColor: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(20),
-                  controller:_searchController ,
-                  placeholder: '  Search a question...',
-                  
+                  controller: _searchController,
+                  placeholder: 'Search a question...',
+                  onChanged: (value) {
+                    setState(() {
+                      _searchText = value.toLowerCase();
+                    });
+                  },
                 ),
               ),
-              SizedBox(height: 1,),
-                StreamBuilder<QuerySnapshot>(
-                            stream: _postServices.fetchAllPosts(),
-                            builder: (context, snapshot) {
-                if(snapshot.hasData){
-                  return Expanded(
-                    child: ListView.separated(
-                      itemCount: snapshot.data!.docs.length,
-                      shrinkWrap: true,
-                      scrollDirection: Axis.vertical,
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      separatorBuilder: (context, index) => Container(
-                            height: 1,
-                            color: Colors.grey.shade300,
-                          ),
-                      itemBuilder: (context, index) {
-                        Post p = Post(
-                         author: snapshot.data!.docs[index]["author"],
-                         text: snapshot.data!.docs[index]["text"],
-                         question: snapshot.data!.docs[index]["question"],
-                         media: snapshot.data!.docs[index]["media"]??'',
-                         addedAt: snapshot.data!.docs[index]["addedAt"],
-                         liked: snapshot.data!.docs[index]["liked"],
-                        comments: snapshot.data!.docs[index]["comments"],
-                        savedPosts: snapshot.data!.docs[index]["savedPosts"]
-                         
-                        );
-                        
-                        return PostWidget(
-                       postIdx: index,
-                        postId:snapshot.data!.docs[index].id,
-                        post: p,
-                        
-                        );
-                      }),
-                  );
-                
-                }else{
-                  return Text('loading');
-                }
-                            }
-                          )
-               
-            
-            
+              SizedBox(height: 1),
+              StreamBuilder<QuerySnapshot>(
+                stream: _postServices.fetchAllPosts(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final filteredPosts = snapshot.data!.docs.where((doc) {
+                      final post = doc.data() as Map<String, dynamic>;
+                      final question = post['question']?.toString().toLowerCase() ?? '';
+                      final text = post['text']?.toString().toLowerCase() ?? '';
+                      return question.contains(_searchText) || 
+                             text.contains(_searchText);
+                    }).toList();
+
+                    if (filteredPosts.isEmpty) {
+                      return Expanded(
+                        child: Center(
+                          child: Text('No posts found',
+                              style: TextStyle(color: Colors.white))),
+                      );
+                    }
+
+                    return Expanded(
+                      child: ListView.separated(
+                        itemCount: filteredPosts.length,
+                        shrinkWrap: true,
+                        scrollDirection: Axis.vertical,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        separatorBuilder: (context, index) => Container(
+                          height: 1,
+                          color: Colors.grey.shade300,
+                        ),
+                        itemBuilder: (context, index) {
+                          Post p = Post(
+                            author: filteredPosts[index]["author"],
+                            text: filteredPosts[index]["text"],
+                            question: filteredPosts[index]["question"],
+                            media: filteredPosts[index]["media"] ?? '',
+                            addedAt: filteredPosts[index]["addedAt"],
+                            liked: filteredPosts[index]["liked"],
+                            comments: filteredPosts[index]["comments"],
+                            savedPosts: filteredPosts[index]["savedPosts"],
+                          );
+                          
+                          return PostWidget(
+                            postIdx: index,
+                            postId: filteredPosts[index].id,
+                            post: p,
+                          );
+                        },
+                      ),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error loading posts'));
+                  }
+                  return Center(child: CircularProgressIndicator());
+                },
+              ),
             ],
           ),
-        )),
-      
+        ),
+      ),
     );
   }
 }
