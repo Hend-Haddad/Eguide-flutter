@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "643979142408",
+    "project_id": "eguide-8d26d",
+    "storage_bucket": "eguide-8d26d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:643979142408:android:1c218d244e2fa154eab8bd",
+        "android_client_info": {
+          "package_name": "tn.chaima.teg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0iDhv4bPxiUU4UK4Tg3Z3PsE7c_gPSqA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
