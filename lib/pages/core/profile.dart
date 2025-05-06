@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eguideapp/main.dart';
 import 'package:eguideapp/models/end_user.dart';
 import 'package:eguideapp/pages/core/edit_profile.dart';
 import 'package:eguideapp/pages/core/my_posts.dart';
@@ -240,28 +241,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 14),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (context) => const SettingsPage(),
-                            ),
-                          );
-                        },
-                        child: Row(
-                          children: const [
-                            Icon(CupertinoIcons.gear, size: 20),
-                            SizedBox(width: 12),
-                            Text('Settings', style: TextStyle(fontSize: 22)),
-                            Spacer(),
-                            Icon(
-                              CupertinoIcons.chevron_forward,
-                              color: Colors.blue,
-                            ),
-                          ],
-                        ),
-                      ),
+                     InkWell(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsPage()),
+    );
+  },
+  child: Row(
+    children: const [
+      Icon(CupertinoIcons.gear, size: 20),
+      SizedBox(width: 12),
+      Text('Settings', style: TextStyle(fontSize: 22)),
+      Spacer(),
+      Icon(
+        CupertinoIcons.chevron_forward,
+        color: Colors.blue,
+      ),
+    ],
+  ),
+),
 
                       const SizedBox(height: 24),
                     ],

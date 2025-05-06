@@ -1,30 +1,41 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:eguideapp/main.dart';
+import 'package:eguideapp/pages/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:eguideapp/main.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Test du chargement initial de l\'application', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => ThemeProvider(false),
+        child: const MaterialApp(home: SplashPage()),
+      ),
+    );
+    
+    expect(find.byType(SplashPage), findsOneWidget);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('Test du changement de thème', (WidgetTester tester) async {
+    final themeProvider = ThemeProvider(false);
+    
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => themeProvider,
+        child: const MyApp(),
+      ),
+    );
+    
+    // Vérifier le thème initial
+    final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(materialApp.theme?.brightness, Brightness.light);
+    
+    // Changer le thème
+    await themeProvider.toggleDarkMode(true);
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    
+    // Vérifier que le thème a changé
+    final updatedMaterialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(updatedMaterialApp.theme?.brightness, Brightness.dark);
   });
 }
