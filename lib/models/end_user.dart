@@ -30,7 +30,7 @@ class EndUser {
         uid: json["uid"],
         username: json["username"],
         email: json["email"],
-        avatarUrl: json["avatarUrl"],
+        avatarUrl: json["avatarUrl"] ??'',
         from: json["from"],
         livingIn: json["livingIn"],
         mediaLink: json["mediaLink"],
