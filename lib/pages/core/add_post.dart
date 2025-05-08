@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eguideapp/pages/core/navpage.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -11,35 +11,30 @@ import '../../widgets/disabled_button.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:image_picker/image_picker.dart';
 
-class addPostPage extends StatefulWidget {
-  const addPostPage({super.key});
+class AddPostPage extends StatefulWidget {
+  const AddPostPage({super.key});
 
   @override
-  State<addPostPage> createState() => _addPostPageState();
+  State<AddPostPage> createState() => _AddPostPageState();
 }
 
-String finalURL = '';
-String downloadURL = '';
-TextEditingController _postTextController = TextEditingController();
-TextEditingController _questionController = TextEditingController();
-PostServices _postServices = PostServices();
-FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+class _AddPostPageState extends State<AddPostPage> {
+  final PostServices _postServices = PostServices();
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-class _addPostPageState extends State<addPostPage> {
-  bool isTextEmpty = true;
-  bool imageUploaded = false;
+  late TextEditingController _postTextController;
+  late TextEditingController _questionController;
 
-  firebase_storage.FirebaseStorage storage = firebase_storage.FirebaseStorage.instance;
-  XFile myImg = XFile('');
-  File? selectedFile;
-  String selectedFileName = '';
-  PlatformFile platformFile = PlatformFile(name: "name", size: 2048);
+  File? _pickedImage;
+  String? _imageUrl;
+  bool _isTextEmpty = true;
+  bool _isUploading = false;
 
   @override
   void initState() {
+    super.initState();
     _postTextController = TextEditingController();
     _questionController = TextEditingController();
-    super.initState();
   }
 
   @override
@@ -49,31 +44,92 @@ class _addPostPageState extends State<addPostPage> {
     super.dispose();
   }
 
-  _pickImgGallery() async {
-    XFile? userImg = await ImagePicker().pickImage(
-        source: ImageSource.gallery, maxWidth: 3000, maxHeight: 3000);
-    if (userImg != null) {
+  void _updateButtonState() {
+    setState(() {
+      _isTextEmpty = _questionController.text.trim().isEmpty &&
+          _postTextController.text.trim().isEmpty &&
+          _pickedImage == null;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+
+    if (pickedFile != null) {
       setState(() {
-        myImg = XFile(userImg.path);
-        imageUploaded = true;
+        _pickedImage = File(pickedFile.path);
       });
+      _updateButtonState();
     }
   }
 
-  Future uploadFile() async {
-    final fileName = DateTime.now().toString();
-    final destination = 'files/$fileName';
+  Future<String?> _uploadImage() async {
+    if (_pickedImage == null) return null;
+
+    setState(() {
+      _isUploading = true;
+    });
 
     try {
-      final ref = firebase_storage.FirebaseStorage.instance.ref(destination).child('file/');
-      await ref.putFile(File(myImg.path));
-      setState(() async {
-        downloadURL = (await ref.getDownloadURL()).toString();
-        finalURL = downloadURL;
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final storageRef = firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child('files')
+          .child(fileName);
+
+      await storageRef.putFile(_pickedImage!);
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      setState(() {
+        _imageUrl = downloadUrl;
+        _isUploading = false;
       });
+
+      return downloadUrl;
     } catch (e) {
-      print('error occurred');
+      setState(() {
+        _isUploading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de l\'upload: ${e.toString()}')),
+      );
+      return null;
     }
+  }
+
+  Future<void> _createPost() async {
+    if (_postTextController.text.trim().isEmpty &&
+        _questionController.text.trim().isEmpty &&
+        _pickedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez ajouter une question, un post ou une image.')),
+      );
+      return;
+    }
+
+    final imageUrl = _pickedImage != null ? await _uploadImage() : null;
+
+    final newPost = Post(
+      author: _firebaseAuth.currentUser!.uid,
+      addedAt: DateTime.now().toString(),
+      text: _postTextController.text.trim(),
+      question: _questionController.text.trim(),
+      liked: [],
+      comments: [],
+      savedPosts: [],
+      media: imageUrl,
+    );
+
+    await _postServices.addPost(newPost);
+    Navigator.pushReplacement(
+      context,
+      CupertinoPageRoute(builder: (context) => const NavPage()),
+    );
   }
 
   @override
@@ -93,17 +149,15 @@ class _addPostPageState extends State<addPostPage> {
                   children: const [
                     Text(
                       'Write your question :',
-                      style: TextStyle(color: Color.fromARGB(255, 94, 142, 206), fontSize: 20),
+                      style: TextStyle(
+                          color: Color.fromARGB(255, 94, 142, 206),
+                          fontSize: 20),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      isTextEmpty = value.isEmpty ? true : false;
-                    });
-                  },
+                  onChanged: (value) => _updateButtonState(),
                   keyboardType: TextInputType.multiline,
                   controller: _questionController,
                   cursorColor: Colors.teal,
@@ -112,10 +166,10 @@ class _addPostPageState extends State<addPostPage> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.grey.shade50,
-                    enabledBorder: OutlineInputBorder(
+                    enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey),
                     ),
-                    focusedBorder: OutlineInputBorder(
+                    focusedBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.blue, width: 2.0),
                     ),
                   ),
@@ -126,18 +180,15 @@ class _addPostPageState extends State<addPostPage> {
                   children: const [
                     Text(
                       'Write your Post :',
-                      style: TextStyle(color: Color.fromARGB(255, 94, 142, 206), 
-                      fontSize: 20,
-                    ),)
+                      style: TextStyle(
+                          color: Color.fromARGB(255, 94, 142, 206),
+                          fontSize: 20),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      isTextEmpty = value.isEmpty ? true : false;
-                    });
-                  },
+                  onChanged: (value) => _updateButtonState(),
                   keyboardType: TextInputType.multiline,
                   controller: _postTextController,
                   cursorColor: Colors.teal,
@@ -147,10 +198,10 @@ class _addPostPageState extends State<addPostPage> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.grey.shade50,
-                    enabledBorder: OutlineInputBorder(
+                    enabledBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey),
                     ),
-                    focusedBorder: OutlineInputBorder(
+                    focusedBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.blue, width: 2.0),
                     ),
                   ),
@@ -159,9 +210,7 @@ class _addPostPageState extends State<addPostPage> {
                 Row(
                   children: [
                     InkWell(
-                      onTap: () {
-                        _pickImgGallery();
-                      },
+                      onTap: _pickImage,
                       child: Row(
                         children: const [
                           Icon(
@@ -171,17 +220,17 @@ class _addPostPageState extends State<addPostPage> {
                           Text(
                             ' Add photo',
                             style: TextStyle(
-                                color: Color.fromARGB(255, 217, 173, 225),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16),
+                              color: Color.fromARGB(255, 217, 173, 225),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     const Spacer(),
-                    Visibility(
-                      visible: imageUploaded,
-                      child: Row(
+                    if (_pickedImage != null)
+                      Row(
                         children: const [
                           Icon(
                             CupertinoIcons.check_mark_circled_solid,
@@ -194,33 +243,21 @@ class _addPostPageState extends State<addPostPage> {
                           ),
                         ],
                       ),
-                    ),
+                    if (_isUploading)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 8.0),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 30),
                 DisabledButton(
-                  isDisabled: isTextEmpty,
-                  onClick: () {
-                    uploadFile().then((value) {
-                      print(value);
-                      print(finalURL);
-                      Post newPost = Post(
-                        author: _firebaseAuth.currentUser!.uid,
-                        addedAt: DateTime.now().toString(),
-                        text: _postTextController.text,
-                        question: _questionController.text,
-                        liked: List.empty(),
-                        comments: List.empty(),
-                        savedPosts: List.empty(),
-                        media: finalURL,
-                      );
-                      _postServices.addPost(newPost);
-                      Navigator.pushReplacement(
-                          context,
-                          CupertinoPageRoute(
-                              builder: (context) => const NavPage()));
-                    });
-                  },
+                  isDisabled: _isTextEmpty || _isUploading,
+                  onClick: _createPost,
                 ),
               ],
             ),
@@ -229,8 +266,4 @@ class _addPostPageState extends State<addPostPage> {
       ),
     );
   }
-}
-
-bool DisableButton() {
-  return false;
 }

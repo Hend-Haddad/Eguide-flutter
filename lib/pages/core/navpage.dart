@@ -16,7 +16,7 @@ class _NavPageState extends State<NavPage> {
 
   final List<Widget> _pages = [
     const Homepage(),
-    const addPostPage(),
+    const AddPostPage(),
     const ProfileScreen(),
   ];
 

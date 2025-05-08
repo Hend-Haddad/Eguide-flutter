@@ -94,10 +94,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: Colors.blue.shade200,
                           padding: const EdgeInsets.all(3),
                           child: CircleAvatar(
-                            radius: 60,
-                            foregroundImage: NetworkImage(userInfo.avatarUrl!),
-                            backgroundColor: Colors.blue.shade50,
-                          ),
+  radius: 60,
+  foregroundImage: NetworkImage(userInfo.avatarUrl ?? ''),
+  backgroundColor: Colors.blue.shade50,
+  child: userInfo.avatarUrl == null || userInfo.avatarUrl!.isEmpty
+      ? const Icon(Icons.person, size: 50)
+      : null,
+),
                         ),
                       ),
 
