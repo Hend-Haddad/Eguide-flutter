@@ -18,10 +18,10 @@ class PostWidget extends StatelessWidget {
   final Post post;
 
   const PostWidget({
-    super.key, 
-    required this.post, 
-    required this.postId, 
-    required this.postIdx
+    super.key,
+    required this.post,
+    required this.postId,
+    required this.postIdx,
   });
 
   @override
@@ -43,7 +43,7 @@ class PostWidget extends StatelessWidget {
               } else {
                 return const Text("Loading...");
               }
-            }
+            },
           ),
           const SizedBox(height: 14),
           PostBody(
@@ -70,16 +70,17 @@ class UserMetaData extends StatelessWidget {
   final String addedAt;
 
   const UserMetaData({
-    super.key, 
-    required this.avatar, 
-    required this.username, 
-    required this.addedAt
+    super.key,
+    required this.avatar,
+    required this.username,
+    required this.addedAt,
   });
 
   @override
   Widget build(BuildContext context) {
     DateTime parsedDate = DateTime.parse(addedAt);
     String formattedDate = DateFormat('MMM d, yyyy \'at\' h:mm a').format(parsedDate);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Row(
       children: [
@@ -93,10 +94,10 @@ class UserMetaData extends StatelessWidget {
           children: [
             Text(
               username,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: Colors.black87,
+                color: isDarkMode ? Colors.white : Colors.black87,
               ),
             ),
             const SizedBox(height: 4),
@@ -127,10 +128,10 @@ class PostBody extends StatelessWidget {
   final String mediaUrl;
 
   const PostBody({
-    super.key, 
-    required this.text, 
-    required this.mediaUrl, 
-    required this.question
+    super.key,
+    required this.text,
+    required this.mediaUrl,
+    required this.question,
   });
 
   @override
@@ -172,8 +173,8 @@ class PostBody extends StatelessWidget {
                 height: 250,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: NetworkImage(mediaUrl), 
-                    fit: BoxFit.cover
+                    image: NetworkImage(mediaUrl),
+                    fit: BoxFit.cover,
                   ),
                 ),
               ),
@@ -195,7 +196,7 @@ class PostActions extends StatefulWidget {
     required this.pid,
     required this.pidx,
     required this.comments,
-    required this.savedPosts
+    required this.savedPosts,
   });
 
   @override
@@ -238,9 +239,9 @@ class _PostActionsState extends State<PostActions> {
                   Text(
                     '${widget.likes.length}',
                     style: const TextStyle(
-                      color: Colors.black54, 
-                      fontWeight: FontWeight.w300, 
-                      fontSize: 16
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w300,
+                      fontSize: 16,
                     ),
                   ),
                 ],
@@ -252,7 +253,9 @@ class _PostActionsState extends State<PostActions> {
               Navigator.push(
                 context,
                 CupertinoPageRoute(
-                  builder: (context) => AddComment(postId: widget.pid, pidx: widget.pidx)),
+                  builder: (context) =>
+                      AddComment(postId: widget.pid, pidx: widget.pidx),
+                ),
               );
             },
             child: Container(
@@ -270,9 +273,9 @@ class _PostActionsState extends State<PostActions> {
                   Text(
                     '${widget.comments.length}',
                     style: const TextStyle(
-                      color: Colors.black54, 
-                      fontWeight: FontWeight.w300, 
-                      fontSize: 16
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w300,
+                      fontSize: 16,
                     ),
                   ),
                 ],

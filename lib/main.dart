@@ -9,7 +9,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   
-  // Chargez le thème avant de lancer l'app
   final prefs = await SharedPreferences.getInstance();
   final isDarkMode = prefs.getBool('darkMode') ?? false;
   
@@ -61,15 +60,18 @@ class MyApp extends StatelessWidget {
       primary: Colors.blueGrey,
       secondary: Colors.lightBlue,
     ),
-    scaffoldBackgroundColor: Colors.grey.shade900,
+    scaffoldBackgroundColor: Colors.black, // Fond de page noir
     cardColor: Colors.grey.shade800,
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.grey.shade900,
+      backgroundColor: Colors.black, // Fond de l'appBar noir
       titleTextStyle: const TextStyle(
-        color: Colors.white,
+        color: Colors.lightBlue, // Titre en bleu clair
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
+    ),
+    textTheme: const TextTheme(
+      bodyLarge: TextStyle(color: Colors.white), // Texte en blanc
     ),
   );
 }
