@@ -1,4 +1,5 @@
 import 'package:eguideapp/pages/core/add_comment.dart';
+import 'package:eguideapp/pages/core/public_profile.dart';
 import 'package:eguideapp/servises/post_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -31,20 +32,22 @@ class PostWidget extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          FutureBuilder<DocumentSnapshot>(
-            future: _authServices.getUserData(post.author),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return UserMetaData(
-                  avatar: snapshot.data!["avatarUrl"] ?? '',
-                  username: snapshot.data!["username"],
-                  addedAt: post.addedAt,
-                );
-              } else {
-                return const Text("Loading...");
-              }
-            },
-          ),
+          // Dans la classe PostWidget, modifiez le FutureBuilder
+FutureBuilder<DocumentSnapshot>(
+  future: _authServices.getUserData(post.author),
+  builder: (context, snapshot) {
+    if (snapshot.hasData) {
+      return UserMetaData(
+        avatar: snapshot.data!["avatarUrl"] ?? '',
+        username: snapshot.data!["username"],
+        addedAt: post.addedAt,
+        userId: post.author, // Ajoutez l'ID de l'utilisateur
+      );
+    } else {
+      return const Text("Loading...");
+    }
+  },
+),
           const SizedBox(height: 14),
           PostBody(
             question: post.question,
@@ -64,16 +67,19 @@ class PostWidget extends StatelessWidget {
   }
 }
 
+// Dans le fichier post_widget.dart, modifiez la classe UserMetaData
 class UserMetaData extends StatelessWidget {
   final String avatar;
   final String username;
   final String addedAt;
+  final String userId; // Ajoutez ce champ
 
   const UserMetaData({
     super.key,
     required this.avatar,
     required this.username,
     required this.addedAt,
+    required this.userId, // Ajoutez ce paramètre
   });
 
   @override
@@ -82,42 +88,52 @@ class UserMetaData extends StatelessWidget {
     String formattedDate = DateFormat('MMM d, yyyy \'at\' h:mm a').format(parsedDate);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 24,
-          foregroundImage: NetworkImage(avatar),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              username,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: isDarkMode ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  formattedDate,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => PublicProfileScreen(userId: userId),
+          ),
+        );
+      },
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            foregroundImage: NetworkImage(avatar),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                username,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: isDarkMode ? Colors.white : Colors.black87,
                 ),
-                const SizedBox(width: 3),
-                const Icon(CupertinoIcons.globe, size: 16),
-              ],
-            ),
-          ],
-        ),
-      ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(
+                    formattedDate,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  const Icon(CupertinoIcons.globe, size: 16),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
