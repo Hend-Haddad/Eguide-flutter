@@ -24,61 +24,69 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  Future<DocumentSnapshot>? _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  void _loadUserData() {
+    setState(() {
+      _userFuture = _authServices.getUserData(_firebaseAuth.currentUser!.uid);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-  backgroundColor: isDarkMode ? Colors.black : Colors.blue,
-  elevation: 0,
-  title: Text(
-    'Profile',
-    style: TextStyle(
-      color: Colors.white,
-      fontSize: 20,
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-  
-  leading: Container(), // Remplacer l'IconButton par un Container vide
-  actions: [
-    IconButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          CupertinoPageRoute(
-            builder: (context) => const EditProfile(),
+        backgroundColor: isDarkMode ? Colors.black : Colors.blue,
+        elevation: 0,
+        title: Text(
+          'Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-        );
-      },
-      icon: Icon(CupertinoIcons.pencil, color: Colors.white),
-    ),
-    IconButton(
-      onPressed: () async {
-        await _authServices.logout().then(
-          (value) => Navigator.pushReplacement(
-            context,
-            CupertinoPageRoute(
-              builder: (context) => const LoginPage(),
-            ),
+        ),
+        leading: Container(),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                CupertinoPageRoute(builder: (context) => const EditProfile()),
+              );
+              _loadUserData(); // Rafraîchir les données après retour
+            },
+            icon: Icon(CupertinoIcons.pencil, color: Colors.white),
           ),
-        );
-      },
-      icon: Icon(Icons.logout, color: Colors.white),
-    ),
-  ],
-),
-
-      
+          IconButton(
+            onPressed: () async {
+              await _authServices.logout().then(
+                (value) => Navigator.pushReplacement(
+                  context,
+                  CupertinoPageRoute(builder: (context) => const LoginPage()),
+                ),
+              );
+            },
+            icon: Icon(Icons.logout, color: Colors.white),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
             margin: AppDims.globalMargin,
             child: FutureBuilder<DocumentSnapshot>(
-              future: _authServices.getUserData(_firebaseAuth.currentUser!.uid),
+              future: _userFuture,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   EndUser userInfo = EndUser(
@@ -102,16 +110,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.all(3),
                           child: CircleAvatar(
                             radius: 60,
-                            foregroundImage: NetworkImage(
-                              userInfo.avatarUrl ?? '',
-                            ),
                             backgroundColor: theme.cardColor,
+                            backgroundImage:
+                                userInfo.avatarUrl != null &&
+                                        userInfo.avatarUrl!.isNotEmpty
+                                    ? NetworkImage(userInfo.avatarUrl!)
+                                    : null,
                             child:
                                 userInfo.avatarUrl == null ||
                                         userInfo.avatarUrl!.isEmpty
-                                    ? Icon(Icons.person, 
-                                        size: 50, 
-                                        color: theme.colorScheme.onBackground)
+                                    ? Icon(
+                                      Icons.person,
+                                      size: 50,
+                                      color: theme.colorScheme.onBackground,
+                                    )
                                     : null,
                           ),
                         ),
@@ -135,9 +147,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(CupertinoIcons.placemark, 
-                              size: 18, 
-                              color: theme.colorScheme.onBackground),
+                          Icon(
+                            CupertinoIcons.placemark,
+                            size: 18,
+                            color: theme.colorScheme.onBackground,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'from ',
@@ -166,7 +180,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      if (userInfo.mediaLink != null && userInfo.mediaLink!.isNotEmpty)
+                      if (userInfo.mediaLink != null &&
+                          userInfo.mediaLink!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: TextButton(
@@ -254,16 +269,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    
+
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            Icon(icon, 
-                size: 20, 
-                color: theme.colorScheme.onBackground),
+            Icon(icon, size: 20, color: theme.colorScheme.onBackground),
             const SizedBox(width: 12),
             Text(
               text,
