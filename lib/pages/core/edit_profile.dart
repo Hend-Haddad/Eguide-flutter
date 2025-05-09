@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart'; // Add this import
 
 class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
@@ -55,18 +56,44 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 85,
-    );
-    
-    if (pickedFile != null) {
-      setState(() {
-        _pickedImage = File(pickedFile.path);
-      });
-      await _uploadImage();
+    // Request permission to access photos
+    final status = await Permission.photos.request();
+
+    if (status.isGranted) {
+      // Permission granted, proceed to pick image
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      
+      if (pickedFile != null) {
+        setState(() {
+          _pickedImage = File(pickedFile.path);
+        });
+        await _uploadImage();
+      }
+    } else if (status.isDenied) {
+      // Permission denied, show a message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Permission to access gallery was denied.'),
+        ),
+      );
+    } else if (status.isPermanentlyDenied) {
+      // Permission permanently denied, guide user to settings
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Gallery access is permanently denied. Please enable it in settings.'),
+          action: SnackBarAction(
+            label: 'Settings',
+            onPressed: () {
+              openAppSettings(); // Opens app settings
+            },
+          ),
+        ),
+      );
     }
   }
 

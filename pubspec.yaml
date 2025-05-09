@@ -36,7 +36,7 @@ dependencies:
   image_picker: ^1.1.2
   file_picker: ^10.1.2
   firebase_storage: ^12.4.5
- 
+  permission_handler: ^11.3.1
   firebase_core: ^3.13.0
   firebase_auth: ^5.5.2
   cloud_firestore: ^5.6.6  # Mettre à jour la version
