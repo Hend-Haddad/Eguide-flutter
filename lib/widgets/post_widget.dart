@@ -32,7 +32,7 @@ class PostWidget extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          // Dans la classe PostWidget, modifiez le FutureBuilder
+          
 FutureBuilder<DocumentSnapshot>(
   future: _authServices.getUserData(post.author),
   builder: (context, snapshot) {
