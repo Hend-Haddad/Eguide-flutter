@@ -180,6 +180,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 10),
+
+
                       if (userInfo.mediaLink != null &&
                           userInfo.mediaLink!.isNotEmpty)
                         Padding(
@@ -200,6 +202,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
+
+
+                        
                       if (userInfo.bio != null && userInfo.bio!.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
