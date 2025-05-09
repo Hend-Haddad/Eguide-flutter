@@ -78,7 +78,6 @@ class _EditProfileState extends State<EditProfile> {
     });
 
     try {
-      // Stockage dans le dossier files/
       final storageRef = firebase_storage.FirebaseStorage.instance
           .ref()
           .child('files')
@@ -92,7 +91,6 @@ class _EditProfileState extends State<EditProfile> {
         _isUploading = false;
       });
 
-      // Mise à jour immédiate dans Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(_firebaseAuth.currentUser!.uid)
@@ -110,22 +108,35 @@ class _EditProfileState extends State<EditProfile> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: FutureBuilder<DocumentSnapshot>(
             future: _authServices.getUserData(_firebaseAuth.currentUser!.uid),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.secondary,
+                  ),
+                );
               }
 
               if (snapshot.hasError) {
-                return Center(child: Text('Erreur: ${snapshot.error}'));
+                return Center(
+                  child: Text('Erreur: ${snapshot.error}',
+                      style: theme.textTheme.bodyLarge),
+                );
               }
 
               if (!snapshot.hasData || !snapshot.data!.exists) {
-                return const Center(child: Text('Profil non trouvé'));
+                return Center(
+                  child: Text('Profil non trouvé',
+                      style: theme.textTheme.bodyLarge),
+                );
               }
 
               final userData = snapshot.data!.data() as Map<String, dynamic>;
@@ -150,9 +161,14 @@ class _EditProfileState extends State<EditProfile> {
                     children: [
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(CupertinoIcons.xmark, size: 26),
+                        icon: Icon(CupertinoIcons.xmark, 
+                            size: 26, 
+                            color: theme.colorScheme.onBackground),
                       ),
-                      const Text('Modifier le profil', style: TextStyle(fontSize: 24)),
+                      Text('Modifier le profil', 
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: theme.colorScheme.onBackground,
+                          )),
                       IconButton(
                         onPressed: () async {
                           final newUser = EndUser(
@@ -175,7 +191,8 @@ class _EditProfileState extends State<EditProfile> {
                             Navigator.pop(context);
                           }
                         },
-                        icon: const Icon(CupertinoIcons.check_mark, color: Colors.blue),
+                        icon: Icon(CupertinoIcons.check_mark, 
+                            color: theme.colorScheme.secondary),
                       ),
                     ],
                   ),
@@ -187,40 +204,49 @@ class _EditProfileState extends State<EditProfile> {
                       children: [
                         CircleAvatar(
                           radius: 60,
-                          backgroundColor: Colors.blue.shade50,
+                          backgroundColor: theme.cardColor,
                           backgroundImage: _getAvatarImage(currentAvatarUrl),
                           child: _getAvatarImage(currentAvatarUrl) == null
-                              ? const Icon(Icons.person, size: 50)
+                              ? Icon(Icons.person, 
+                                  size: 50, 
+                                  color: theme.colorScheme.onBackground)
                               : null,
                         ),
                         if (_isUploading)
-                          const CircularProgressIndicator(),
+                          CircularProgressIndicator(
+                            color: theme.colorScheme.secondary,
+                          ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextButton(
                     onPressed: _pickImage,
-                    child: const Text(
+                    child: Text(
                       'Changer la photo',
-                      style: TextStyle(color: Colors.blue, fontSize: 16),
+                      style: TextStyle(
+                        color: theme.colorScheme.secondary, 
+                        fontSize: 16
+                      ),
                     ),
                   ),
-                  _buildTextField(_nameController, 'Nom d\'utilisateur'),
-                  _buildTextField(_emailController, 'Email'),
-                  _buildTextField(_fromController, 'Pays d\'origine'),
-                  _buildTextField(_livingInController, 'Pays de résidence'),
-                  _buildTextField(_mediaLinkController, 'Site web'),
+                  _buildTextField(_nameController, 'Nom d\'utilisateur', theme),
+                  _buildTextField(_emailController, 'Email', theme),
+                  _buildTextField(_fromController, 'Pays d\'origine', theme),
+                  _buildTextField(_livingInController, 'Pays de résidence', theme),
+                  _buildTextField(_mediaLinkController, 'Site web', theme),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 26.0, vertical: 5),
                     child: TextField(
                       controller: _bioController,
+                      style: TextStyle(color: theme.colorScheme.onBackground),
                       maxLines: 5,
                       minLines: 1,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Bio',
+                        labelStyle: TextStyle(color: theme.colorScheme.onBackground),
                         alignLabelWithHint: true,
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                     ),
                   ),
@@ -242,13 +268,15 @@ class _EditProfileState extends State<EditProfile> {
     return null;
   }
 
-  Widget _buildTextField(TextEditingController controller, String label) {
+  Widget _buildTextField(TextEditingController controller, String label, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 26.0, vertical: 8),
       child: TextField(
         controller: controller,
+        style: TextStyle(color: theme.colorScheme.onBackground),
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: TextStyle(color: theme.colorScheme.onBackground),
           border: const OutlineInputBorder(),
         ),
       ),

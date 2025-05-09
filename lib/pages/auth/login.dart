@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import '../../servises/auth_services.dart';
 import '../../utils/app_strings.dart';
 import '../../utils/app_styles.dart';
+import 'package:provider/provider.dart';
+import 'package:eguideapp/main.dart';
 
 TextEditingController _emailController = TextEditingController();
 TextEditingController _passController = TextEditingController();
@@ -41,8 +43,13 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final buttonColor = const Color.fromARGB(230, 94, 142, 206); // Couleur originale du bouton
+    final linkColor = Colors.blue; // Couleur originale des liens
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Container(
@@ -56,7 +63,9 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   Text(
                     AppStrings.LoginPageSignin,
-                    style: AppStyles.authTitleStyle,
+                    style: AppStyles.authTitleStyle.copyWith(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
                   )
                 ],
               ),
@@ -68,29 +77,32 @@ class _LoginPageState extends State<LoginPage> {
                 child: TextField(
                   controller: _emailController,
                   focusNode: _emailFocusNode,
+                  style: TextStyle(color: Colors.black), // Texte toujours noir
                   decoration: InputDecoration(
+                    filled: true,
+                    fillColor: isDarkMode ? Colors.white : Colors.white, // Fond blanc dans les deux modes
                     contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
                     labelText: 'Email',
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                     labelStyle: TextStyle(
-                      color: _emailFocusNode.hasFocus ? Colors.blue : Colors.black54,
+                      color: _emailFocusNode.hasFocus ? buttonColor : Colors.black54,
                     ),
                     prefixIcon: Icon(
                       Icons.alternate_email,
                       size: 18,
-                      color: _emailFocusNode.hasFocus ? Colors.blue : Colors.black54,
+                      color: _emailFocusNode.hasFocus ? buttonColor : Colors.black54,
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
                       borderSide: BorderSide(
-                        color: _emailFocusNode.hasFocus ? Colors.blue : Colors.grey,
+                        color: _emailFocusNode.hasFocus ? buttonColor : Colors.grey,
                         width: 1.5,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
+                      borderSide: BorderSide(
+                        color: buttonColor,
                         width: 2.0,
                       ),
                     ),
@@ -104,20 +116,23 @@ class _LoginPageState extends State<LoginPage> {
               Focus(
                 onFocusChange: (_) => setState(() {}),
                 child: TextField(
-                  obscureText: _isPassVisible,
+                  obscureText: !_isPassVisible,
                   controller: _passController,
                   focusNode: _passwordFocusNode,
+                  style: TextStyle(color: Colors.black), // Texte toujours noir
                   decoration: InputDecoration(
+                    filled: true,
+                    fillColor: isDarkMode ? Colors.white : Colors.white, // Fond blanc dans les deux modes
                     contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
                     labelText: 'Password',
                     floatingLabelBehavior: FloatingLabelBehavior.always,
                     labelStyle: TextStyle(
-                      color: _passwordFocusNode.hasFocus ? Colors.blue : Colors.black54,
+                      color: _passwordFocusNode.hasFocus ? buttonColor : Colors.black54,
                     ),
                     prefixIcon: Icon(
                       CupertinoIcons.lock,
                       size: 18,
-                      color: _passwordFocusNode.hasFocus ? Colors.blue : Colors.black54,
+                      color: _passwordFocusNode.hasFocus ? buttonColor : Colors.black54,
                     ),
                     suffixIcon: IconButton(
                       onPressed: () {
@@ -127,20 +142,20 @@ class _LoginPageState extends State<LoginPage> {
                       },
                       icon: Icon(
                         _isPassVisible ? Icons.visibility_off : Icons.visibility,
-                        color: _passwordFocusNode.hasFocus ? Colors.blue : Colors.black54,
+                        color: _passwordFocusNode.hasFocus ? buttonColor : Colors.black54,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
                       borderSide: BorderSide(
-                        color: _passwordFocusNode.hasFocus ? Colors.blue : Colors.grey,
+                        color: _passwordFocusNode.hasFocus ? buttonColor : Colors.grey,
                         width: 1.5,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20.0),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
+                      borderSide: BorderSide(
+                        color: buttonColor,
                         width: 2.0,
                       ),
                     ),
@@ -160,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                     },
                     child: Text(
                       'Forgot Password?',
-                      style: TextStyle(color: Colors.blue),
+                      style: TextStyle(color: linkColor), // Couleur originale
                     ),
                   ),
                 ],
@@ -170,7 +185,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   Expanded(
                     child: CupertinoButton(
-                      color: const Color.fromARGB(230, 94, 142, 206),
+                      color: buttonColor, // Couleur originale
                       child: const Text(
                         'Sign in',
                         style: TextStyle(
@@ -181,15 +196,17 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () async {
                         if (_emailController.text.trim().isEmpty ||
                             _passController.text.isEmpty) {
-                          const snackbar = SnackBar(
-                            content: Text("Email/Password cannot be empty!"));
+                          final snackbar = SnackBar(
+                            content: Text("Email/Password cannot be empty!"),
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(snackbar);
                         } else {
                           dynamic creds = await _authServices.loginUser(
                             _emailController.text, _passController.text);
                           if (creds == null) {
-                            const snackbar = SnackBar(
-                              content: Text("Email/Password invalid!"));
+                            final snackbar = SnackBar(
+                              content: Text("Email/Password invalid!"),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(snackbar);
                           } else {
                             Navigator.pushReplacement(
@@ -210,7 +227,12 @@ class _LoginPageState extends State<LoginPage> {
                   Center(
                     child: Row(
                       children: [
-                        const Text('Not a member?'),
+                        Text(
+                          'Not a member?',
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
@@ -218,9 +240,9 @@ class _LoginPageState extends State<LoginPage> {
                               CupertinoPageRoute(
                                 builder: (context) => SignupPage()));
                           },
-                          child: const Text(
+                          child: Text(
                             'Sign up',
-                            style: TextStyle(color: Colors.blue),
+                            style: TextStyle(color: linkColor), // Couleur originale
                           ),
                         ),
                       ],

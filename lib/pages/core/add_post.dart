@@ -35,6 +35,8 @@ class _AddPostPageState extends State<AddPostPage> {
     super.initState();
     _postTextController = TextEditingController();
     _questionController = TextEditingController();
+    _postTextController.addListener(_updateButtonState);
+    _questionController.addListener(_updateButtonState);
   }
 
   @override
@@ -63,8 +65,8 @@ class _AddPostPageState extends State<AddPostPage> {
     if (pickedFile != null) {
       setState(() {
         _pickedImage = File(pickedFile.path);
+        _updateButtonState();
       });
-      _updateButtonState();
     }
   }
 
@@ -134,8 +136,10 @@ class _AddPostPageState extends State<AddPostPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      backgroundColor: Colors.white12,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
@@ -146,12 +150,12 @@ class _AddPostPageState extends State<AddPostPage> {
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Write your question :',
-                      style: TextStyle(
-                          color: Color.fromARGB(255, 94, 142, 206),
-                          fontSize: 20),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
+                      ),
                     ),
                   ],
                 ),
@@ -160,29 +164,32 @@ class _AddPostPageState extends State<AddPostPage> {
                   onChanged: (value) => _updateButtonState(),
                   keyboardType: TextInputType.multiline,
                   controller: _questionController,
-                  cursorColor: Colors.teal,
+                  cursorColor: theme.colorScheme.secondary,
                   cursorHeight: 22,
                   maxLines: 3,
+                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.grey.shade50,
-                    enabledBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
+                    fillColor: theme.cardColor,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: theme.dividerColor),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.secondary, 
+                        width: 2.0),
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
                       'Write your Post :',
-                      style: TextStyle(
-                          color: Color.fromARGB(255, 94, 142, 206),
-                          fontSize: 20),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
+                      ),
                     ),
                   ],
                 ),
@@ -191,18 +198,20 @@ class _AddPostPageState extends State<AddPostPage> {
                   onChanged: (value) => _updateButtonState(),
                   keyboardType: TextInputType.multiline,
                   controller: _postTextController,
-                  cursorColor: Colors.teal,
+                  cursorColor: theme.colorScheme.secondary,
                   cursorHeight: 22,
                   maxLines: 8,
-                  textAlign: TextAlign.start,
+                  style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.grey.shade50,
-                    enabledBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey),
+                    fillColor: theme.cardColor,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: theme.dividerColor),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: theme.colorScheme.secondary, 
+                        width: 2.0),
                     ),
                   ),
                 ),
@@ -212,15 +221,16 @@ class _AddPostPageState extends State<AddPostPage> {
                     InkWell(
                       onTap: _pickImage,
                       child: Row(
-                        children: const [
+                        children: [
                           Icon(
                             CupertinoIcons.photo,
-                            color: Color.fromARGB(255, 217, 173, 225),
+                            color: theme.colorScheme.secondary,
                           ),
+                          const SizedBox(width: 8),
                           Text(
-                            ' Add photo',
+                            'Add photo',
                             style: TextStyle(
-                              color: Color.fromARGB(255, 217, 173, 225),
+                              color: theme.colorScheme.secondary,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -231,25 +241,30 @@ class _AddPostPageState extends State<AddPostPage> {
                     const Spacer(),
                     if (_pickedImage != null)
                       Row(
-                        children: const [
+                        children: [
                           Icon(
                             CupertinoIcons.check_mark_circled_solid,
-                            color: Colors.teal,
+                            color: theme.colorScheme.secondary,
                           ),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
                             'image added',
-                            style: TextStyle(color: Colors.teal),
+                            style: TextStyle(
+                              color: theme.colorScheme.secondary,
+                            ),
                           ),
                         ],
                       ),
                     if (_isUploading)
-                      const Padding(
-                        padding: EdgeInsets.only(right: 8.0),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
                         child: SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: theme.colorScheme.secondary,
+                          ),
                         ),
                       ),
                   ],

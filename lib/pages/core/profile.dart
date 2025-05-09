@@ -10,9 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../servises/auth_services.dart';
-
 import '../auth/login.dart';
 
 AuthServices _authServices = AuthServices();
@@ -28,8 +26,53 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: Colors.white12,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+  backgroundColor: isDarkMode ? Colors.black : Colors.blue,
+  elevation: 0,
+  title: Text(
+    'Profile',
+    style: TextStyle(
+      color: Colors.white,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  
+  leading: Container(), // Remplacer l'IconButton par un Container vide
+  actions: [
+    IconButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          CupertinoPageRoute(
+            builder: (context) => const EditProfile(),
+          ),
+        );
+      },
+      icon: Icon(CupertinoIcons.pencil, color: Colors.white),
+    ),
+    IconButton(
+      onPressed: () async {
+        await _authServices.logout().then(
+          (value) => Navigator.pushReplacement(
+            context,
+            CupertinoPageRoute(
+              builder: (context) => const LoginPage(),
+            ),
+          ),
+        );
+      },
+      icon: Icon(Icons.logout, color: Colors.white),
+    ),
+  ],
+),
+
+      
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
@@ -38,7 +81,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               future: _authServices.getUserData(_firebaseAuth.currentUser!.uid),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
-                  print('response: ${snapshot.data!["username"]}');
                   EndUser userInfo = EndUser(
                     uid: '',
                     username: snapshot.data!["username"],
@@ -53,227 +95,188 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const Text('Profile', style: TextStyle(fontSize: 24)),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                CupertinoPageRoute(
-                                  builder: (context) => const EditProfile(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(CupertinoIcons.pencil, size: 26),
-                          ),
-                          const SizedBox(width: 2),
-                          IconButton(
-                            onPressed: () async {
-                              await _authServices.logout().then(
-                                (value) => Navigator.pushReplacement(
-                                  context,
-                                  CupertinoPageRoute(
-                                    builder: (context) => const LoginPage(),
-                                  ),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.logout,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 20),
                       ClipOval(
                         child: Container(
-                          color: Colors.blue.shade200,
+                          color: theme.colorScheme.secondary,
                           padding: const EdgeInsets.all(3),
                           child: CircleAvatar(
-  radius: 60,
-  foregroundImage: NetworkImage(userInfo.avatarUrl ?? ''),
-  backgroundColor: Colors.blue.shade50,
-  child: userInfo.avatarUrl == null || userInfo.avatarUrl!.isEmpty
-      ? const Icon(Icons.person, size: 50)
-      : null,
-),
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-                      Column(
-                        children: [
-                          Text(
-                            '${userInfo.username}',
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                            radius: 60,
+                            foregroundImage: NetworkImage(
+                              userInfo.avatarUrl ?? '',
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            userInfo.email!,
-                            style: const TextStyle(
-                              color: Colors.blueGrey,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(CupertinoIcons.placemark, size: 18),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'from ',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              Text(
-                                '${userInfo.from}',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              const Text(
-                                ', living in  ',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              Text(
-                                '${userInfo.livingIn}',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Flexible(
-                            child: TextButton(
-                              onPressed: () async {
-                                final Uri url = Uri.parse(userInfo.mediaLink!);
-                                if (await canLaunchUrl(url)) {
-                                  await launchUrl(url);
-                                }
-                              },
-                              child:
-                                  userInfo.mediaLink != ''
-                                      ? Text(
-                                        '${userInfo.mediaLink}',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.blue.shade700,
-                                        ),
-                                      )
-                                      : Container(color: Colors.white12),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Flexible(
+                            backgroundColor: theme.cardColor,
                             child:
-                                userInfo.bio != ''
-                                    ? Text(
-                                      '${userInfo.bio}',
-                                      style: const TextStyle(fontSize: 16),
-                                    )
-                                    : Container(color: Colors.white12),
+                                userInfo.avatarUrl == null ||
+                                        userInfo.avatarUrl!.isEmpty
+                                    ? Icon(Icons.person, 
+                                        size: 50, 
+                                        color: theme.colorScheme.onBackground)
+                                    : null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        '${userInfo.username}',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.onBackground,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        userInfo.email!,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.secondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(CupertinoIcons.placemark, 
+                              size: 18, 
+                              color: theme.colorScheme.onBackground),
+                          const SizedBox(width: 4),
+                          Text(
+                            'from ',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onBackground,
+                            ),
+                          ),
+                          Text(
+                            '${userInfo.from}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onBackground,
+                            ),
+                          ),
+                          Text(
+                            ', living in  ',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onBackground,
+                            ),
+                          ),
+                          Text(
+                            '${userInfo.livingIn}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onBackground,
+                            ),
                           ),
                         ],
                       ),
-
+                      const SizedBox(height: 10),
+                      if (userInfo.mediaLink != null && userInfo.mediaLink!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: TextButton(
+                            onPressed: () async {
+                              final Uri url = Uri.parse(userInfo.mediaLink!);
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(url);
+                              }
+                            },
+                            child: Text(
+                              '${userInfo.mediaLink}',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: theme.colorScheme.secondary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (userInfo.bio != null && userInfo.bio!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            '${userInfo.bio}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onBackground,
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 28),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (context) => const MyPosts(),
-                            ),
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(CupertinoIcons.collections, size: 18),
-                            const SizedBox(width: 5),
-                            const Text(
-                              'My posts',
-                              style: TextStyle(fontSize: 22),
-                            ),
-                            const Spacer(),
-                            Icon(
-                              CupertinoIcons.chevron_forward,
-                              color: Colors.blue.shade700,
-                            ),
-                          ],
+                      _buildProfileOption(
+                        context,
+                        icon: CupertinoIcons.collections,
+                        text: 'My posts',
+                        onTap: () => Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (context) => const MyPosts(),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            CupertinoPageRoute(
-                              builder: (context) => const SavedPosts(),
-                            ),
-                          );
-                        },
-                        child: Row(
-                          children: [
-                            const Icon(CupertinoIcons.bookmark, size: 18),
-                            const SizedBox(width: 4),
-                            const Text(
-                              'Saved posts',
-                              style: TextStyle(fontSize: 22),
-                            ),
-                            const Spacer(),
-                            Icon(
-                              CupertinoIcons.chevron_forward,
-                              color: Colors.blue.shade700,
-                            ),
-                          ],
+                      _buildProfileOption(
+                        context,
+                        icon: CupertinoIcons.bookmark,
+                        text: 'Saved posts',
+                        onTap: () => Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (context) => const SavedPosts(),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                     InkWell(
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SettingsPage()),
-    );
-  },
-  child: Row(
-    children: const [
-      Icon(CupertinoIcons.gear, size: 20),
-      SizedBox(width: 12),
-      Text('Settings', style: TextStyle(fontSize: 22)),
-      Spacer(),
-      Icon(
-        CupertinoIcons.chevron_forward,
-        color: Colors.blue,
-      ),
-    ],
-  ),
-),
-
+                      _buildProfileOption(
+                        context,
+                        icon: CupertinoIcons.gear,
+                        text: 'Settings',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsPage(),
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 24),
                     ],
                   );
                 } else {
-                  return Container();
+                  return Center(
+                    child: CircularProgressIndicator(
+                      color: theme.colorScheme.secondary,
+                    ),
+                  );
                 }
               },
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileOption(
+    BuildContext context, {
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, 
+                size: 20, 
+                color: theme.colorScheme.onBackground),
+            const SizedBox(width: 12),
+            Text(
+              text,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onBackground,
+              ),
+            ),
+            const Spacer(),
+            Icon(
+              CupertinoIcons.chevron_forward,
+              color: theme.colorScheme.secondary,
+            ),
+          ],
         ),
       ),
     );
