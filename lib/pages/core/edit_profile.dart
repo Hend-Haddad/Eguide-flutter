@@ -1,14 +1,13 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eguideapp/models/end_user.dart';
-import 'package:eguideapp/pages/core/profile.dart';
 import 'package:eguideapp/servises/auth_services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart'; // Add this import
+import 'package:permission_handler/permission_handler.dart';
 
 class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
@@ -56,11 +55,9 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _pickImage() async {
-    // Request permission to access photos
     final status = await Permission.photos.request();
 
     if (status.isGranted) {
-      // Permission granted, proceed to pick image
       final pickedFile = await ImagePicker().pickImage(
         source: ImageSource.gallery,
         maxWidth: 800,
@@ -75,21 +72,19 @@ class _EditProfileState extends State<EditProfile> {
         await _uploadImage();
       }
     } else if (status.isDenied) {
-      // Permission denied, show a message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Permission to access gallery was denied.'),
         ),
       );
     } else if (status.isPermanentlyDenied) {
-      // Permission permanently denied, guide user to settings
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Gallery access is permanently denied. Please enable it in settings.'),
           action: SnackBarAction(
             label: 'Settings',
             onPressed: () {
-              openAppSettings(); // Opens app settings
+              openAppSettings();
             },
           ),
         ),
@@ -118,17 +113,12 @@ class _EditProfileState extends State<EditProfile> {
         _isUploading = false;
       });
 
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(_firebaseAuth.currentUser!.uid)
-          .update({'avatarUrl': downloadUrl});
-
     } catch (e) {
       setState(() {
         _isUploading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur: ${e.toString()}')),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
   }
@@ -154,14 +144,14 @@ class _EditProfileState extends State<EditProfile> {
 
               if (snapshot.hasError) {
                 return Center(
-                  child: Text('Erreur: ${snapshot.error}',
+                  child: Text('Error: ${snapshot.error}',
                       style: theme.textTheme.bodyLarge),
                 );
               }
 
               if (!snapshot.hasData || !snapshot.data!.exists) {
                 return Center(
-                  child: Text('Profil non trouvé',
+                  child: Text('Profile not found',
                       style: theme.textTheme.bodyLarge),
                 );
               }
@@ -192,7 +182,7 @@ class _EditProfileState extends State<EditProfile> {
                             size: 26, 
                             color: theme.colorScheme.onBackground),
                       ),
-                      Text('Modifier le profil', 
+                      Text('Edit Profile', 
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: theme.colorScheme.onBackground,
                           )),
@@ -211,15 +201,34 @@ class _EditProfileState extends State<EditProfile> {
 
                           if (_nameController.text.trim().isNotEmpty &&
                               _emailController.text.trim().isNotEmpty) {
-                            await _authServices.addUserToCollection(
-                              newUser, 
-                              _firebaseAuth.currentUser!.uid
-                            );
-                            Navigator.pop(context);
+                            setState(() {
+                              _isUploading = true;
+                            });
+                            
+                            try {
+                              await _authServices.addUserToCollection(
+                                newUser, 
+                                _firebaseAuth.currentUser!.uid
+                              );
+                              Navigator.pop(context);
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error updating profile: $e')),
+                              );
+                            } finally {
+                              setState(() {
+                                _isUploading = false;
+                              });
+                            }
                           }
                         },
-                        icon: Icon(CupertinoIcons.check_mark, 
-                            color: theme.colorScheme.secondary),
+                        icon: _isUploading
+                            ? CircularProgressIndicator(
+                                color: theme.colorScheme.secondary,
+                                strokeWidth: 2,
+                              )
+                            : Icon(CupertinoIcons.check_mark, 
+                                color: theme.colorScheme.secondary),
                       ),
                     ],
                   ),
@@ -250,18 +259,18 @@ class _EditProfileState extends State<EditProfile> {
                   TextButton(
                     onPressed: _pickImage,
                     child: Text(
-                      'Changer la photo',
+                      'Change photo',
                       style: TextStyle(
                         color: theme.colorScheme.secondary, 
                         fontSize: 16
                       ),
                     ),
                   ),
-                  _buildTextField(_nameController, 'Nom d\'utilisateur', theme),
+                  _buildTextField(_nameController, 'Username', theme),
                   _buildTextField(_emailController, 'Email', theme),
-                  _buildTextField(_fromController, 'Pays d\'origine', theme),
-                  _buildTextField(_livingInController, 'Pays de résidence', theme),
-                  _buildTextField(_mediaLinkController, 'Site web', theme),
+                  _buildTextField(_fromController, 'Country of origin', theme),
+                  _buildTextField(_livingInController, 'Country of residence', theme),
+                  _buildTextField(_mediaLinkController, 'Website', theme),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 26.0, vertical: 5),
                     child: TextField(

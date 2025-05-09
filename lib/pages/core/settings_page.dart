@@ -12,13 +12,14 @@ class SettingsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Paramètres'),
+        
+        title: const Text('Settings'),
         iconTheme: IconThemeData(
-          color: isDarkMode ? Colors.white : Colors.black, // Couleur de la flèche
+          color: isDarkMode ? Colors.white : Colors.white, // Couleur de la flèche
         ),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // Facultatif
+         backgroundColor: isDarkMode ? Colors.black : Colors.blue,
         titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: isDarkMode ? Colors.white : Colors.white,
             ),
       ),
       body: ListView(
